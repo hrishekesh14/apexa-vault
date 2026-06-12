@@ -1,0 +1,96 @@
+{
+  "name": "apexa-vault-frontend",
+  "version": "1.0.0",
+  "description": "Apexa Vault — Decentralized Cloud Storage Frontend. Developed by Hrishekesh Varma.",
+  "author": "Hrishekesh Varma",
+  "license": "UNLICENSED",
+  "private": true,
+
+  "scripts": {
+    "dev":     "lite-server",
+    "start":   "lite-server",
+    "preview": "lite-server --baseDir .",
+    "lint":    "eslint app.js --fix",
+    "format":  "prettier --write index.html style.css app.js",
+    "validate": "html-validate index.html",
+    "check":   "npm run lint && npm run format && npm run validate",
+    "clean":   "rimraf dist",
+    "build":   "npm run clean && npm run lint && node scripts/build.js",
+    "deploy":  "npm run build && echo 'Ready to serve from /dist'"
+  },
+
+  "devDependencies": {
+    "lite-server":   "^2.6.1",
+    "eslint":        "^8.57.0",
+    "prettier":      "^3.2.5",
+    "html-validate": "^8.18.1",
+    "rimraf":        "^5.0.5"
+  },
+
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions",
+    "iOS >= 14",
+    "not dead"
+  ],
+
+  "prettier": {
+    "singleQuote":    true,
+    "semi":           true,
+    "tabWidth":       4,
+    "trailingComma":  "es5",
+    "printWidth":     120
+  },
+
+  "eslintConfig": {
+    "env": {
+      "browser":  true,
+      "es2022":   true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2022
+    },
+    "rules": {
+      "no-unused-vars":    "warn",
+      "no-undef":          "warn",
+      "no-console":        ["warn", { "allow": ["warn", "error"] }],
+      "prefer-const":      "warn",
+      "eqeqeq":            "error",
+      "no-alert":          "error"
+    }
+  },
+
+  "litServer": {
+    "port":     3000,
+    "open":     false,
+    "logLevel": 2,
+    "watch": ["*.html", "*.css", "*.js", "!node_modules/**"],
+    "server": {
+      "baseDir": ".",
+      "middleware": {
+        "0": {
+          "route": "/api",
+          "handle": "function(req, res, next) { res.writeHead(307, { Location: 'http://localhost:5000' + req.url }); res.end(); }"
+        }
+      }
+    }
+  },
+
+  "keywords": [
+    "apexa-vault",
+    "ipfs",
+    "decentralized-storage",
+    "blockchain",
+    "aes-256",
+    "pinata",
+    "saas",
+    "frontend"
+  ],
+
+  "engines": {
+    "node": ">=18.0.0",
+    "npm":  ">=9.0.0"
+  }
+}
