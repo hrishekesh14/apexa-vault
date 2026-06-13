@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
        CONFIG
     ============================================================ */
     const CONFIG = {
-        API_BASE: 'http://localhost:5000/api',   // Change to your backend URL
+        API_BASE: 'https://apexa-vault-2.onrender.com/api',   // Change to your backend URL
         TOKEN_KEY: 'apexa_token',
         REFRESH_KEY: 'apexa_refresh_token',
         USER_KEY: 'apexa_current_user',
