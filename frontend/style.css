@@ -53,6 +53,10 @@ body {
     align-items : center;
     justify-content: center;
     overflow-x  : hidden;
+    /* FIX 1: overflow-y:auto allows auth page to scroll when register form
+       exceeds viewport height (e.g. landscape phones, small tablets).
+       Without this, body as a flex container clips overflow content. */
+    overflow-y  : auto;
     /* Prevent rubber-band scroll from showing white background */
     overscroll-behavior: none;
 }
@@ -91,8 +95,21 @@ body {
     z-index        : 1;
     display        : flex;
     flex-direction : column;
-    justify-content: center;
+    /* FIX 2: Changed from justify-content:center to flex-start + padding-top.
+       With centering, when the register card exceeds viewport height on short
+       viewports (landscape phones, small tablets), the TOP of the card gets
+       pushed above the viewport and is completely unreachable — users cannot
+       scroll up to see the username field or the top of the form.
+       flex-start + padding-top keeps the card anchored at the top, allowing
+       normal page scroll to reach all content. */
+    justify-content: flex-start;
+    padding-top    : max(2rem, 5dvh);
+    /* FIX 2b: overflow-y:auto as a safety net — if auth-container itself
+       somehow exceeds the body scroll context, it can scroll independently. */
+    overflow-y     : auto;
     min-height     : 100dvh;
+    /* Ensure padding-bottom so submit button is never hidden behind safe area */
+    padding-bottom : max(1.5rem, var(--safe-bottom));
 }
 
 /* ── Auth Card ───────────────────────────────────────────────────── */
@@ -868,7 +885,6 @@ input:focus {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    /* TASK 1: Let long usernames wrap gracefully instead of cutting off */
     word-break     : break-word;
     overflow-wrap  : anywhere;
 }
@@ -1241,10 +1257,17 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     transform    : translateY(40px);
     opacity      : 0;
     transition   : all 0.6s var(--ease);
-    /* TASK 2: Always constrain to viewport, scroll internally */
+    /* Constrain height and make modal-card a flex column so modal-body
+       can flex:1 and be the scroll container, keeping footer always visible */
     max-height   : 90dvh;
     max-height   : 90vh;
-    overflow-y   : auto;
+    /* FIX 3: display:flex + flex-direction:column turns modal-card into a proper
+       flex column. This allows .modal-body to use flex:1 + overflow-y:auto,
+       making the BODY scroll while the header and footer stay fixed/visible.
+       Without this, the modal-body grows unconstrained and the whole modal-card
+       tries to scroll, which can push the footer below the visible area. */
+    display      : flex;
+    flex-direction: column;
     overscroll-behavior: contain;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -1280,12 +1303,20 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     margin-bottom: 2rem;
 }
 
-/* TASK 2: Modal body scrolls internally if content overflows */
+/* FIX 3b: modal-body is now the scroll container.
+   flex:1 makes it fill remaining height inside the flex modal-card.
+   min-height:0 is required on flex children to allow shrinking below content size.
+   overflow-y:auto enables scrolling when settings list exceeds available height. */
 .modal-body {
-    overflow-y: auto;
+    overflow-y         : auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    flex               : 1;
+    min-height         : 0;
+    scrollbar-width    : none;
 }
+
+.modal-body::-webkit-scrollbar { display: none; }
 
 .modal-footer {
     display        : flex;
@@ -1293,6 +1324,9 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     align-items    : center;
     justify-content: center;
     flex-wrap      : wrap;
+    /* Ensure footer never scrolls away — it's a flex sibling of modal-body */
+    flex-shrink    : 0;
+    padding-top    : 1rem;
 }
 
 .btn-text {
@@ -1694,11 +1728,9 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     border-radius  : 16px;
     text-align     : left;
     gap            : 0.75rem;
-    /* TASK 1: Wrap on very narrow screens */
     flex-wrap      : wrap;
 }
 
-/* Wallet row — button sits right-aligned */
 .setting-item--wallet {
     align-items: center;
 }
@@ -2052,7 +2084,6 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     gap            : 1rem;
     padding        : 0.625rem 0;
     border-bottom  : 1px solid rgba(255,255,255,.04);
-    /* TASK 1 & 2: Wrap on tiny screens so hashes don't overflow */
     flex-wrap      : wrap;
 }
 
@@ -2164,173 +2195,6 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
 }
 
 .auth-card:hover .auth-dev-sig-text { color:rgba(255,255,255,.28); }
-
-/* ── Dashboard sidebar developer branding ────────────────────────── */
-.developer-branding {
-    margin-top  : 1.25rem;
-    cursor      : default;
-    user-select : none;
-}
-
-.dev-sig-inner {
-    display    : flex;
-    align-items: center;
-    gap        : 0.625rem;
-    padding    : 0.625rem 0.75rem;
-    border-radius: 10px;
-    border     : 1px solid rgba(255,255,255,.05);
-    background : rgba(255,255,255,.02);
-    transition : all 0.4s var(--ease);
-}
-
-.developer-branding:hover .dev-sig-inner {
-    border-color: rgba(255,255,255,.1);
-    background  : rgba(255,255,255,.04);
-}
-
-.dev-monogram {
-    width          : 26px;
-    height         : 26px;
-    border-radius  : 7px;
-    background     : linear-gradient(135deg, rgba(79,70,229,.35), rgba(124,58,237,.35));
-    border         : 1px solid rgba(255,255,255,.1);
-    display        : flex;
-    align-items    : center;
-    justify-content: center;
-    font-size      : 0.55rem;
-    font-weight    : 800;
-    letter-spacing : 0.02em;
-    color          : rgba(255,255,255,.6);
-    font-family    : var(--font-display);
-    flex-shrink    : 0;
-    transition     : all 0.4s var(--ease);
-}
-
-.developer-branding:hover .dev-monogram {
-    background: linear-gradient(135deg, rgba(79,70,229,.6), rgba(124,58,237,.6));
-    color     : rgba(255,255,255,.9);
-    box-shadow: 0 0 12px rgba(79,70,229,.3);
-}
-
-.dev-sig-text {
-    display       : flex;
-    flex-direction: column;
-    gap           : 0.1rem;
-    min-width     : 0;
-}
-
-.dev-label {
-    font-size     : 0.55rem;
-    font-weight   : 600;
-    color         : rgba(255,255,255,.22);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    display       : block;
-}
-
-.dev-name {
-    font-size      : 0.7rem;
-    font-weight    : 700;
-    letter-spacing : 0.01em;
-    display        : block;
-    background     : linear-gradient(90deg,
-        rgba(255,255,255,.32) 0%,
-        rgba(255,255,255,.52) 50%,
-        rgba(255,255,255,.32) 100%);
-    background-size : 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip : text;
-    animation       : nameShimmer 6s linear infinite;
-    white-space     : nowrap;
-    overflow        : hidden;
-    text-overflow   : ellipsis;
-}
-
-.developer-branding:hover .dev-name {
-    background: linear-gradient(90deg,
-        rgba(255,255,255,.6) 0%,
-        rgba(255,255,255,.9) 50%,
-        rgba(255,255,255,.6) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: nameShimmer 2s linear infinite;
-}
-
-@keyframes nameShimmer {
-    0%   { background-position: 200% center; }
-    100% { background-position: -200% center; }
-}
-
-/* ── Mobile footer signature (dashboard home) ────────────────────── */
-.mobile-footer-sig {
-    display        : none;
-    align-items    : center;
-    justify-content: center;
-    gap            : 0.5rem;
-    padding        : 1rem 1.5rem;
-    padding-bottom : calc(1rem + var(--safe-bottom));
-    border-top     : 1px solid rgba(255,255,255,.05);
-    margin-top     : auto;
-    flex-wrap      : wrap;
-}
-
-.mfs-monogram {
-    width          : 22px;
-    height         : 22px;
-    border-radius  : 6px;
-    background     : linear-gradient(135deg, rgba(79,70,229,.4), rgba(124,58,237,.4));
-    border         : 1px solid rgba(255,255,255,.1);
-    display        : flex;
-    align-items    : center;
-    justify-content: center;
-    font-size      : 0.5rem;
-    font-weight    : 800;
-    color          : rgba(255,255,255,.55);
-    font-family    : var(--font-display);
-    flex-shrink    : 0;
-}
-
-.mfs-text {
-    display    : flex;
-    align-items: center;
-    gap        : 0.375rem;
-    font-size  : 0.65rem;
-    color      : rgba(255,255,255,.2);
-    font-weight: 400;
-    flex-wrap  : wrap;
-    justify-content: center;
-}
-
-.mfs-brand {
-    font-family   : var(--font-display);
-    font-size     : 0.6rem;
-    font-weight   : 700;
-    letter-spacing: 0.15em;
-    color         : rgba(255,255,255,.28);
-    text-transform: uppercase;
-    border        : 1px solid rgba(255,255,255,.1);
-    padding       : 0.1rem 0.375rem;
-    border-radius : 3px;
-}
-
-.mfs-sep { color:rgba(255,255,255,.12); }
-
-.mfs-text strong {
-    font-weight : 600;
-    color       : rgba(255,255,255,.32);
-    background  : linear-gradient(90deg,
-        rgba(255,255,255,.25) 0%,
-        rgba(255,255,255,.45) 50%,
-        rgba(255,255,255,.25) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation   : nameShimmer 6s linear infinite;
-}
 
 /* ── Settings modal developer signature ──────────────────────────── */
 .settings-sig {
@@ -2633,12 +2497,18 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
 
 /* ── Landscape phone: auth card compact ─────────────────────────── */
 @media (max-height: 500px) and (orientation: landscape) {
-    .auth-container { min-height:auto; padding:0.75rem 1.5rem; }
+    .auth-container {
+        min-height  : auto;
+        /* On landscape, reduce top padding so card appears near top
+           but still scrollable if content exceeds viewport */
+        padding-top : 1rem;
+        padding-bottom: 1rem;
+    }
     .auth-card      { gap:0.875rem; padding:1.25rem 1.5rem; }
     .logo           { margin-bottom:0.5rem; }
     h1              { font-size:1.1rem; }
     .auth-card > .auth-header > p { display:none; }
-    .auth-dev-sig   { display:none; }
+    .auth-dev-credit { display:none; }
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────── */
@@ -2677,7 +2547,7 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
     border      : none;
     outline     : none;
     color       : var(--text-primary);
-    font-size   : 0.875rem;
+    font-size   : max(16px, 0.875rem); /* prevent iOS auto-zoom on focus */
     font-family : var(--font-sans);
     min-width   : 0;
 }
@@ -2857,7 +2727,7 @@ input:checked + .toggle-slider::before        { transform:translateX(20px); }
 ================================================================ */
 
 /* ── Base: prevent ANY horizontal overflow everywhere ───────────── */
-html, body {
+body {
     max-width  : 100%;
     overflow-x : hidden;
 }
@@ -3030,7 +2900,7 @@ html, body {
     .pipeline-step-icon svg { width: 13px; height: 13px; }
     .pipeline-step-label { font-size: 0.44rem; }
     .pipeline-connector  { max-width: 14px; }
-    .cid-input-wrapper input { font-size: 0.75rem; }
+    .cid-input-wrapper input { font-size: max(16px, 0.8125rem); }
     .modal-card          { padding: 1.25rem 0.875rem; }
 }
 
@@ -3103,7 +2973,7 @@ html, body {
 .cid-input-wrapper input { min-width: 0; max-width: 100%; }
 
 /* ── Auth container always fills and centers ────────────────────── */
-.auth-container { min-height: 100dvh; width: 100%; max-width: 100%; }
+.auth-container { width: 100%; max-width: 100%; }
 .auth-card      { width: 100%; max-width: 480px; }
 
 /* ── Prevent pipeline from causing horizontal scroll ────────────── */
@@ -3119,4 +2989,47 @@ html, body {
     .wallet-options { gap: 0.625rem; }
     .wallet-option-btn { padding: 0.875rem; }
     .wallet-option-icon { font-size: 1.25rem; }
+}
+
+/* ================================================================
+   APEXA VAULT — Production Bug Fixes
+   Applied after audit — minimum targeted changes only
+================================================================ */
+
+/* FIX: Mobile logout nav item — hidden on desktop, visible on mobile */
+.nav-logout-mobile {
+    display: none;
+    color  : #ef4444;
+}
+.nav-logout-mobile:hover { background:rgba(239,68,68,.1); color:#ef4444; }
+
+@media (max-width: 768px) {
+    .nav-logout-mobile { display: flex; }
+}
+
+/* FIX: Wallet connect button in settings modal — flex-safe */
+.wallet-connect-btn {
+    flex-shrink : 0;
+    white-space : nowrap;
+    width       : auto !important;
+    margin-left : auto;
+    margin-top  : 0;
+}
+
+/* On very small screens, wallet row stacks and button aligns right */
+@media (max-width: 400px) {
+    .setting-item { flex-wrap: wrap; }
+    .wallet-connect-btn {
+        margin-left: 0;
+        align-self : flex-end;
+        margin-top : 0.5rem;
+    }
+}
+
+/* FIX: Developer-branding bare-text fallback */
+.developer-branding > *:not(.dev-sig-inner) {
+    font-size  : 0.7rem;
+    color      : rgba(255,255,255,.25);
+    padding    : 0.5rem;
+    display    : block;
 }
