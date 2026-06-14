@@ -30,7 +30,7 @@ const userRoutes       = require('./routes/user.routes');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
-
+app.set('trust proxy', 1);
 /* =========================================================
    🔥 BODY PARSING MIDDLEWARE (IMPORTANT FIX ADDED HERE)
    ========================================================= */
@@ -58,7 +58,7 @@ app.use(cors({
 // ── Rate Limiting ────────────────────────────────────────────────
 const limiter = rateLimit({
     windowMs : parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-    max      : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+    max      : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500,
     message  : { success: false, message: 'Too many requests. Please try again later.' },
     standardHeaders: true,
     legacyHeaders: false
@@ -66,7 +66,7 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs : 15 * 60 * 1000,
-    max      : 10,
+    max      : 100,
     message  : { success: false, message: 'Too many auth attempts. Please wait 15 minutes.' }
 });
 
