@@ -80,154 +80,176 @@
 </head>
 <body>
 
+    <!-- Skip to main content — keyboard accessibility -->
+    <a href="#dashboardMain" class="skip-link">Skip to main content</a>
+
     <!-- Loading Screen — Developed by Hrishekesh Varma -->
-    <div id="apexaLoader">
+    <div id="apexaLoader" role="status" aria-label="Loading Apexa Vault">
         <div class="loader-logo">
-            <div class="loader-symbol">A</div>
+            <div class="loader-symbol" aria-hidden="true">A</div>
             <span class="loader-name">Apexa Vault</span>
         </div>
-        <div class="loader-bar-wrap">
+        <div class="loader-bar-wrap" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100">
             <div class="loader-bar"></div>
         </div>
         <p class="loader-tagline">Developed by <span>Hrishekesh Varma</span></p>
     </div>
 
-    <div class="glow-container">
+    <div class="glow-container" aria-hidden="true">
         <div class="glow-point glow-1"></div>
         <div class="glow-point glow-2"></div>
         <div class="glow-point glow-3"></div>
     </div>
 
     <main class="app-wrapper">
-        <section id="authSection" class="auth-container">
+        <!-- ── AUTH SECTION ──────────────────────────────────── -->
+        <section id="authSection" class="auth-container" aria-label="Authentication">
             <div class="auth-card" id="authCard">
-                <div id="messageContainer" class="message-container"></div>
+                <div id="messageContainer" class="message-container" aria-live="polite" aria-atomic="true"></div>
 
                 <div class="auth-header">
-                    <div class="logo">
-                        <span class="logo-symbol">A</span>
+                    <div class="logo" aria-label="Apexa Vault">
+                        <span class="logo-symbol" aria-hidden="true">A</span>
                         <span class="logo-text">Apexa</span>
                     </div>
                     <h1 id="authTitle">Welcome back</h1>
                     <p id="authSubtitle">Please enter your details to sign in.</p>
                 </div>
 
-                <div class="tab-container">
-                    <button type="button" id="loginTab" class="tab-btn active">Login</button>
-                    <button type="button" id="registerTab" class="tab-btn">Register</button>
+                <div class="tab-container" role="tablist" aria-label="Authentication options">
+                    <button type="button" id="loginTab" class="tab-btn active"
+                            role="tab" aria-selected="true" aria-controls="loginForm">Login</button>
+                    <button type="button" id="registerTab" class="tab-btn"
+                            role="tab" aria-selected="false" aria-controls="registerForm">Register</button>
                 </div>
 
-                <form id="loginForm" class="auth-form active">
+                <form id="loginForm" class="auth-form active" role="tabpanel" aria-labelledby="loginTab" novalidate>
                     <div class="form-group">
                         <label for="loginEmail">Email Address</label>
-                        <input type="email" id="loginEmail" placeholder="name@company.com" required autocomplete="email">
+                        <input type="email" id="loginEmail" placeholder="name@company.com"
+                               required autocomplete="email" aria-required="true"
+                               aria-describedby="loginEmailHint">
                     </div>
                     <div class="form-group">
                         <div class="label-row">
                             <label for="loginPassword">Password</label>
-                            <a href="#" class="forgot-link">Forgot?</a>
+                            <a href="#" class="forgot-link" aria-label="Forgot password">Forgot?</a>
                         </div>
-                        <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                        <input type="password" id="loginPassword" placeholder="••••••••"
+                               required autocomplete="current-password" aria-required="true">
                     </div>
                     <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Sign In</button>
                 </form>
 
-                <form id="registerForm" class="auth-form">
+                <form id="registerForm" class="auth-form" role="tabpanel" aria-labelledby="registerTab" novalidate>
                     <div class="form-group">
                         <label for="regUsername">Username</label>
-                        <input type="text" id="regUsername" placeholder="apexa_user" required autocomplete="username">
+                        <input type="text" id="regUsername" placeholder="apexa_user"
+                               required autocomplete="username" aria-required="true">
                     </div>
                     <div class="form-group">
                         <label for="regEmail">Email Address</label>
-                        <input type="email" id="regEmail" placeholder="name@company.com" required autocomplete="email">
+                        <input type="email" id="regEmail" placeholder="name@company.com"
+                               required autocomplete="email" aria-required="true">
                     </div>
                     <div class="form-group">
                         <div class="password-grid">
                             <div class="form-group">
                                 <label for="regPassword">Password</label>
-                                <input type="password" id="regPassword" placeholder="••••••••" required autocomplete="new-password">
+                                <input type="password" id="regPassword" placeholder="••••••••"
+                                       required autocomplete="new-password" aria-required="true"
+                                       aria-describedby="passwordHint">
                             </div>
                             <div class="form-group">
                                 <label for="confirmPassword">Confirm</label>
-                                <input type="password" id="confirmPassword" placeholder="••••••••" required autocomplete="new-password">
+                                <input type="password" id="confirmPassword" placeholder="••••••••"
+                                       required autocomplete="new-password" aria-required="true">
                             </div>
                         </div>
+                        <span id="passwordHint" class="sr-only">Password must be at least 6 characters</span>
                     </div>
                     <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Create Account</button>
                 </form>
 
-                <div class="divider"><span>or</span></div>
+                <div class="divider" role="separator"><span>or</span></div>
 
                 <div class="social-auth">
-                    <button type="button" class="social-btn">
-                        <svg viewBox="0 0 24 24" class="social-icon"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.892 4.144-1.228 1.228-3.14 2.568-7.348 2.568-6.676 0-11.92-5.404-11.92-12.08s5.244-12.08 11.92-12.08c3.612 0 6.232 1.428 8.136 3.244l2.312-2.312c-2.208-2.112-5.112-3.756-10.448-3.756-9.54 0-17.34 7.8-17.34 17.34s7.8 17.34 17.34 17.34c5.148 0 9.036-1.7 12.288-5.064 3.36-3.36 4.428-8.088 4.428-11.82 0-.756-.06-1.464-.192-2.12h-16.524z" fill="white"/></svg>
+                    <button type="button" class="social-btn" aria-label="Sign in with Google">
+                        <svg viewBox="0 0 24 24" class="social-icon" aria-hidden="true"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.892 4.144-1.228 1.228-3.14 2.568-7.348 2.568-6.676 0-11.92-5.404-11.92-12.08s5.244-12.08 11.92-12.08c3.612 0 6.232 1.428 8.136 3.244l2.312-2.312c-2.208-2.112-5.112-3.756-10.448-3.756-9.54 0-17.34 7.8-17.34 17.34s7.8 17.34 17.34 17.34c5.148 0 9.036-1.7 12.288-5.064 3.36-3.36 4.428-8.088 4.428-11.82 0-.756-.06-1.464-.192-2.12h-16.524z" fill="white"/></svg>
                         <span>Google</span>
                     </button>
-                    <button type="button" class="social-btn">
-                        <svg viewBox="0 0 24 24" class="social-icon"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z" fill="white"/></svg>
+                    <button type="button" class="social-btn" aria-label="Sign in with GitHub">
+                        <svg viewBox="0 0 24 24" class="social-icon" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z" fill="white"/></svg>
                         <span>GitHub</span>
                     </button>
                 </div>
 
-                <!-- Developer credit on auth page — subtle, elegant -->
+                <!-- Developer credit on auth page -->
                 <p class="auth-dev-credit">Secured infrastructure by <span>Hrishekesh Varma</span></p>
             </div>
         </section>
 
-        <section id="dashboardSection" class="dashboard-container" style="display: none;">
-            <aside class="sidebar">
-                <div class="logo">
-                    <span class="logo-symbol">A</span>
+        <!-- ── DASHBOARD SECTION ──────────────────────────────── -->
+        <section id="dashboardSection" class="dashboard-container" style="display: none;" aria-label="Dashboard">
+
+            <!-- Sidebar / Navigation -->
+            <aside class="sidebar" aria-label="Main navigation">
+                <div class="logo" aria-label="Apexa Vault">
+                    <span class="logo-symbol" aria-hidden="true">A</span>
                     <span class="logo-text">Apexa</span>
                 </div>
-                <nav class="sidebar-nav">
-                    <a href="javascript:void(0)" class="nav-item active" data-section="welcomeSection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                <nav class="sidebar-nav" aria-label="Primary navigation">
+                    <a href="javascript:void(0)" class="nav-item active"
+                       data-section="welcomeSection"
+                       aria-label="Dashboard overview"
+                       aria-current="page">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                         Dashboard
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="uploadSection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="uploadSection" aria-label="Upload files">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
                         Uploads
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="storageSection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="storageSection" aria-label="Storage overview">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
                         Storage
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="securitySection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="securitySection" aria-label="Security settings">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
                         Security
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="blockchainSection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C6.72 18.81 7.86 17.2 9 16.05C9 16.03 9 16.02 9 16C9 14.34 10.34 13 12 13C13.66 13 15 14.34 15 16C15 17.66 13.66 19 12 19C11.76 19 11.52 18.97 11.3 18.91C10.5 19.7 9.61 20.58 8.57 21.57C9.62 21.83 10.79 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 13.68 2.42 15.26 3.15 16.65C4.39 13.68 7.33 9.93 17 8Z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="blockchainSection" aria-label="Blockchain ledger">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C6.72 18.81 7.86 17.2 9 16.05C9 16.03 9 16.02 9 16C9 14.34 10.34 13 12 13C13.66 13 15 14.34 15 16C15 17.66 13.66 19 12 19C11.76 19 11.52 18.97 11.3 18.91C10.5 19.7 9.61 20.58 8.57 21.57C9.62 21.83 10.79 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 13.68 2.42 15.26 3.15 16.65C4.39 13.68 7.33 9.93 17 8Z"/></svg>
                         Blockchain
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="cidRetrievalSection">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="cidRetrievalSection" aria-label="Retrieve file by CID">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
                         Retrieve
                     </a>
-                    <a href="javascript:void(0)" class="nav-item" data-section="settings">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item" data-section="settings" aria-label="Settings">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                         Settings
                     </a>
                     <!-- Mobile logout — visible only on mobile where sidebar-footer is hidden -->
-                    <a href="javascript:void(0)" class="nav-item nav-logout-mobile" id="logoutBtnMobile" title="Sign Out">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                    <a href="javascript:void(0)" class="nav-item nav-logout-mobile"
+                       id="logoutBtnMobile" title="Sign Out" aria-label="Sign out of Apexa Vault">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                         Sign Out
                     </a>
                 </nav>
                 <div class="sidebar-footer">
-                    <div class="network-status-pill" id="networkStatusPill">
-                        <div class="network-dot" id="networkDot"></div>
+                    <div class="network-status-pill" id="networkStatusPill" role="status" aria-live="polite">
+                        <div class="network-dot" id="networkDot" aria-hidden="true"></div>
                         <span id="networkStatusText">IPFS Connected</span>
                     </div>
-                    <button id="logoutBtn" class="logout-btn">
-                        <svg viewBox="0 0 24 24" class="nav-icon"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                    <button id="logoutBtn" class="logout-btn" aria-label="Sign out of Apexa Vault">
+                        <svg viewBox="0 0 24 24" class="nav-icon" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                         Sign Out
                     </button>
-                    <!-- Developer credit — sidebar footer, structured to match CSS -->
+                    <!-- Developer credit — sidebar footer -->
                     <div class="developer-branding">
                         <div class="dev-sig-inner">
-                            <div class="dev-monogram">HV</div>
+                            <div class="dev-monogram" aria-hidden="true">HV</div>
                             <div class="dev-sig-text">
                                 <span class="dev-label">Developed by</span>
                                 <span class="dev-name">Hrishekesh Varma</span>
@@ -237,38 +259,44 @@
                 </div>
             </aside>
 
-            <main class="dashboard-main">
+            <!-- Dashboard Main -->
+            <main class="dashboard-main" id="dashboardMain" tabindex="-1">
                 <header class="dashboard-header">
-                    <div class="header-search">
-                        <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" placeholder="Search files, uploads, settings...">
+                    <div class="header-search" role="search">
+                        <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" placeholder="Search files, uploads, settings..."
+                               aria-label="Search files, uploads and settings">
                     </div>
-                    <div class="chain-status-badge" id="chainStatusBadge">
-                        <div class="chain-pulse"></div>
+                    <div class="chain-status-badge" id="chainStatusBadge" aria-live="polite">
+                        <div class="chain-pulse" aria-hidden="true"></div>
                         <span>Chain Verified</span>
                     </div>
                     <div class="header-profile">
-                        <span id="userNameDisplay" class="user-name">User</span>
-                        <div class="user-avatar">
+                        <span id="userNameDisplay" class="user-name" aria-label="Signed in as">User</span>
+                        <div class="user-avatar" aria-hidden="true">
                             <span id="userInitial">U</span>
                         </div>
                     </div>
                 </header>
 
                 <!-- Mobile search — shown on small screens where header search hides -->
-                <div class="mobile-search-bar" id="mobileSearchBar">
-                    <svg viewBox="0 0 24 24" class="search-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="mobileSearchInput" placeholder="Search files, CID, type...">
+                <div class="mobile-search-bar" id="mobileSearchBar" role="search" aria-label="Search files">
+                    <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="mobileSearchInput"
+                           placeholder="Search files, CID, type..."
+                           aria-label="Search files by name, CID or type">
                 </div>
 
                 <div class="dashboard-content">
                     <div class="content-grid">
+
                         <!-- Welcome Card -->
                         <div class="card welcome-card" id="welcomeSection">
                             <h2 id="welcomeText">Welcome back, User</h2>
                             <p>Manage your secure decentralized storage and explore intelligent insights.</p>
                             <div class="card-action">
-                                <button id="viewActivityBtn" class="btn btn-primary btn-small">View Activity</button>
+                                <button id="viewActivityBtn" class="btn btn-primary btn-small"
+                                        aria-label="View recent activity">View Activity</button>
                             </div>
                         </div>
 
@@ -276,12 +304,18 @@
                         <div class="card storage-card" id="storageSection">
                             <div class="card-header">
                                 <h3>Storage Overview</h3>
-                                <span class="storage-value" id="storageValue">0 B / 5 GB</span>
+                                <span class="storage-value" id="storageValue" aria-live="polite">0 B / 5 GB</span>
                             </div>
-                            <div class="progress-container">
+                            <div class="progress-container"
+                                 role="progressbar"
+                                 aria-label="Storage used"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="2"
+                                 id="storageProgressBar">
                                 <div class="progress-bar" id="storageProgress" style="width: 2%"></div>
                             </div>
-                            <p class="storage-desc" id="storageDesc">Loading storage data...</p>
+                            <p class="storage-desc" id="storageDesc" aria-live="polite">Loading storage data...</p>
                         </div>
 
                         <!-- Hero Upload Card -->
@@ -290,40 +324,53 @@
                                 <h3>Secure Upload</h3>
                                 <p>Files are encrypted with AES-256 before IPFS storage</p>
                             </div>
-                            <div class="drop-zone" id="dropZone">
-                                <div class="upload-visual">
+
+                            <!-- Drop Zone — keyboard accessible -->
+                            <div class="drop-zone" id="dropZone"
+                                 role="button"
+                                 tabindex="0"
+                                 aria-label="Upload files — click, press Enter, or drag and drop files here"
+                                 aria-describedby="dropZoneDesc">
+                                <div class="upload-visual" aria-hidden="true">
                                     <div class="glow-ring"></div>
                                     <svg viewBox="0 0 24 24" class="upload-icon"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
                                 </div>
                                 <div class="drop-text">
                                     <p>Drag and drop files here</p>
-                                    <span>or <mark>click to browse</mark> your local files</span>
+                                    <span id="dropZoneDesc">or <mark>click to browse</mark> your local files</span>
                                 </div>
-                                <input type="file" id="fileInput" multiple hidden>
+                                <input type="file" id="fileInput" multiple hidden
+                                       aria-label="Choose files to upload">
                             </div>
 
                             <!-- Encryption Controls -->
                             <div class="upload-controls" id="securitySection">
                                 <div class="encryption-toggle-wrapper">
-                                    <label class="toggle-container">
-                                        <input type="checkbox" id="encryptToggle">
-                                        <span class="toggle-slider"></span>
+                                    <label class="toggle-container" aria-label="Enable file encryption">
+                                        <input type="checkbox" id="encryptToggle" aria-label="Encrypt this file">
+                                        <span class="toggle-slider" aria-hidden="true"></span>
                                     </label>
-                                    <span class="toggle-label">Encrypt this file</span>
+                                    <span class="toggle-label" id="encryptToggleLabel">Encrypt this file</span>
                                 </div>
-                                <div id="encryptionPasswordWrapper" class="password-input-wrapper">
-                                    <input type="password" id="encryptionPassword" placeholder="Set decryption password">
-                                    <div class="security-glow"></div>
+                                <div id="encryptionPasswordWrapper" class="password-input-wrapper" aria-hidden="true">
+                                    <input type="password" id="encryptionPassword"
+                                           placeholder="Set decryption password"
+                                           aria-label="Set file encryption password"
+                                           autocomplete="new-password">
+                                    <div class="security-glow" aria-hidden="true"></div>
                                 </div>
-                                <button id="secureUploadBtn" class="btn btn-primary btn-small secure-upload-btn">
-                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z"/></svg>
+                                <button id="secureUploadBtn"
+                                        class="btn btn-primary btn-small secure-upload-btn"
+                                        aria-label="Upload and encrypt selected files">
+                                    <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z"/></svg>
                                     Secure Upload
                                 </button>
                             </div>
 
                             <!-- Upload Pipeline Visualizer -->
-                            <div id="uploadPipelineContainer" class="upload-pipeline-container" style="display:none;">
-                                <div class="pipeline-steps">
+                            <div id="uploadPipelineContainer" class="upload-pipeline-container"
+                                 style="display:none;" role="status" aria-label="Upload progress">
+                                <div class="pipeline-steps" aria-hidden="true">
                                     <div class="pipeline-step" id="pStep1">
                                         <div class="pipeline-step-icon">
                                             <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
@@ -352,36 +399,39 @@
                                         <span class="pipeline-step-label">Chain Verify</span>
                                     </div>
                                 </div>
-                                <div class="pipeline-status-text" id="pipelineStatusText">Initializing secure pipeline...</div>
+                                <div class="pipeline-status-text" id="pipelineStatusText"
+                                     aria-live="polite" aria-atomic="true">
+                                    Initializing secure pipeline...
+                                </div>
                             </div>
 
-                            <div id="filePreviewContainer" class="file-preview-container"></div>
+                            <div id="filePreviewContainer" class="file-preview-container" aria-live="polite"></div>
                         </div>
 
                         <!-- AI Insights Card -->
-                        <div class="card ai-card" id="aiInsightsSection">
+                        <div class="card ai-card" id="aiInsightsSection" aria-label="AI Insights">
                             <div class="card-title-icon">
-                                <div class="ai-status-pulse"></div>
+                                <div class="ai-status-pulse" aria-hidden="true"></div>
                                 <h3>Apexa AI Insights</h3>
                             </div>
-                            <div class="insight-list" id="aiInsightList">
+                            <div class="insight-list" id="aiInsightList" aria-live="polite">
                                 <div class="insight-item">
                                     <div class="insight-header">
-                                        <svg viewBox="0 0 24 24" class="insight-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.88c0 4.22-2.55 8.3-7 9.7-4.45-1.4-7-5.48-7-9.7V6.3l7-3.12z"/></svg>
+                                        <svg viewBox="0 0 24 24" class="insight-icon" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.88c0 4.22-2.55 8.3-7 9.7-4.45-1.4-7-5.48-7-9.7V6.3l7-3.12z"/></svg>
                                         <span class="insight-label">Security Scan</span>
                                     </div>
                                     <p>All stored files are currently encrypted and verified.</p>
                                 </div>
                                 <div class="insight-item">
                                     <div class="insight-header">
-                                        <svg viewBox="0 0 24 24" class="insight-icon"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                                        <svg viewBox="0 0 24 24" class="insight-icon" aria-hidden="true"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
                                         <span class="insight-label">Categorization</span>
                                     </div>
                                     <p>AI is analyzing files for auto-tagging. 0 items pending.</p>
                                 </div>
                                 <div class="insight-item">
                                     <div class="insight-header">
-                                        <svg viewBox="0 0 24 24" class="insight-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                                        <svg viewBox="0 0 24 24" class="insight-icon" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
                                         <span class="insight-label">Deduplication</span>
                                     </div>
                                     <p>Duplicate detection is active. No redundancies found.</p>
@@ -393,11 +443,11 @@
                         <div class="card files-card">
                             <div class="card-header">
                                 <h3>Recent Files</h3>
-                                <a href="#" class="view-all">View All</a>
+                                <a href="#" class="view-all" aria-label="View all files">View All</a>
                             </div>
-                            <div id="recentFilesList" class="recent-files-list">
+                            <div id="recentFilesList" class="recent-files-list" aria-live="polite" aria-label="Recent uploaded files">
                                 <div class="empty-state">
-                                    <svg viewBox="0 0 24 24" class="empty-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="empty-icon" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                                     <p>No files uploaded yet</p>
                                     <span>Upload your first file to get started</span>
                                 </div>
@@ -405,15 +455,15 @@
                         </div>
 
                         <!-- Blockchain Verification Card -->
-                        <div class="card blockchain-card" id="blockchainSection">
+                        <div class="card blockchain-card" id="blockchainSection" aria-label="Blockchain ledger">
                             <div class="card-title-icon">
-                                <div class="blockchain-pulse"></div>
+                                <div class="blockchain-pulse" aria-hidden="true"></div>
                                 <h3>Blockchain Ledger</h3>
                             </div>
-                            <div class="blockchain-network-visual">
+                            <div class="blockchain-network-visual" aria-hidden="true">
                                 <canvas id="blockchainCanvas" width="280" height="100"></canvas>
                             </div>
-                            <div id="blockchainLedger" class="blockchain-ledger">
+                            <div id="blockchainLedger" class="blockchain-ledger" aria-live="polite">
                                 <div class="empty-state">
                                     <p>No verified records</p>
                                     <span>Upload files to register ownership on-chain</span>
@@ -422,11 +472,11 @@
                         </div>
 
                         <!-- Recent Activity Card -->
-                        <div class="card activity-card" id="activitySection">
+                        <div class="card activity-card" id="activitySection" aria-label="Recent activity">
                             <div class="card-header">
                                 <h3>Recent Activity</h3>
                             </div>
-                            <div id="activityList" class="activity-list">
+                            <div id="activityList" class="activity-list" aria-live="polite">
                                 <div class="empty-state">
                                     <p>No activity recorded yet</p>
                                 </div>
@@ -434,14 +484,14 @@
                         </div>
 
                         <!-- IPFS Node Map Card -->
-                        <div class="card node-card">
+                        <div class="card node-card" aria-label="IPFS node distribution">
                             <div class="card-title-icon">
-                                <div class="node-pulse-dot"></div>
+                                <div class="node-pulse-dot" aria-hidden="true"></div>
                                 <h3>Node Distribution</h3>
                             </div>
                             <div class="node-map" id="nodeMap">
-                                <div class="node-grid" id="nodeGrid"></div>
-                                <div class="node-stats">
+                                <div class="node-grid" id="nodeGrid" aria-hidden="true"></div>
+                                <div class="node-stats" aria-live="polite">
                                     <div class="node-stat">
                                         <span class="node-stat-val" id="activeNodes">0</span>
                                         <span class="node-stat-label">Active Nodes</span>
@@ -459,29 +509,35 @@
                         </div>
 
                         <!-- CID Retrieval Card -->
-                        <div class="card cid-retrieval-card" id="cidRetrievalSection">
+                        <div class="card cid-retrieval-card" id="cidRetrievalSection" aria-label="Retrieve file by CID">
                             <div class="card-title-icon">
-                                <div class="cid-pulse-dot"></div>
+                                <div class="cid-pulse-dot" aria-hidden="true"></div>
                                 <h3>Retrieve File by CID</h3>
                             </div>
                             <p class="cid-retrieval-desc">Enter an IPFS CID to fetch and preview a file directly from the Pinata gateway.</p>
                             <div class="cid-input-row">
                                 <div class="cid-input-wrapper">
-                                    <svg viewBox="0 0 24 24" class="cid-input-icon"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
-                                    <input type="text" id="cidInput" placeholder="bafybei... or Qm..." autocomplete="off" spellcheck="false">
+                                    <svg viewBox="0 0 24 24" class="cid-input-icon" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+                                    <input type="text" id="cidInput"
+                                           placeholder="bafybei... or Qm..."
+                                           autocomplete="off" spellcheck="false"
+                                           aria-label="Enter IPFS content identifier (CID)">
                                 </div>
-                                <button id="cidRetrieveBtn" class="btn btn-primary btn-small cid-retrieve-btn">
-                                    <svg viewBox="0 0 24 24" class="btn-icon"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                                <button id="cidRetrieveBtn"
+                                        class="btn btn-primary btn-small cid-retrieve-btn"
+                                        aria-label="Retrieve file from IPFS by CID">
+                                    <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                                     Retrieve
                                 </button>
                             </div>
-                            <div id="cidResult" class="cid-result" style="display:none;"></div>
+                            <div id="cidResult" class="cid-result" style="display:none;" aria-live="polite"></div>
                         </div>
-                    </div>
-                </div>
+
+                    </div><!-- /.content-grid -->
+                </div><!-- /.dashboard-content -->
 
                 <!-- Mobile footer sig -->
-                <div class="mobile-footer-sig">
+                <div class="mobile-footer-sig" aria-hidden="true">
                     <div class="mfs-monogram">HV</div>
                     <div class="mfs-text">
                         <span class="mfs-brand">Apexa</span>
@@ -490,22 +546,27 @@
                     </div>
                 </div>
 
-                <!-- Dashboard Footer — Developer Credit -->
+                <!-- Dashboard Footer -->
                 <footer style="text-align:center; padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.04);">
                     <p class="dev-credit">APEXA VAULT — Decentralized Cloud Infrastructure &nbsp;·&nbsp; Developed by <span>Hrishekesh Varma</span></p>
                 </footer>
-            </main>
-        </section>
-    </main>
+
+            </main><!-- /#dashboardMain -->
+        </section><!-- /#dashboardSection -->
+    </main><!-- /.app-wrapper -->
+
+    <!-- ══════════════════════════════════════════════════════
+         MODALS
+    ══════════════════════════════════════════════════════ -->
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-backdrop">
+    <div id="settingsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="security-icon-bg">
+                <div class="security-icon-bg" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="modal-icon"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                 </div>
-                <h3>Apexa Settings</h3>
+                <h3 id="settingsModalTitle">Apexa Settings</h3>
                 <p>Manage your account preferences and security settings.</p>
             </div>
             <div class="modal-body settings-list">
@@ -556,7 +617,9 @@
                         <span class="setting-title">Wallet</span>
                         <span id="walletStatus" class="setting-value">Not Connected</span>
                     </div>
-                    <button class="btn btn-primary btn-small wallet-connect-btn" id="connectWalletBtn">Connect</button>
+                    <button class="btn btn-primary btn-small wallet-connect-btn"
+                            id="connectWalletBtn"
+                            aria-label="Connect crypto wallet">Connect</button>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -566,82 +629,111 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="closeSettings" class="btn btn-primary btn-small">Done</button>
+                <button id="closeSettings" class="btn btn-primary btn-small" aria-label="Close settings">Done</button>
             </div>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
 
     <!-- Password Prompt Modal (Decrypt Download) -->
-    <div id="passwordModal" class="modal-backdrop">
+    <div id="passwordModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="security-icon-bg">
+                <div class="security-icon-bg" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="modal-icon"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
                 </div>
-                <h3>File Encrypted</h3>
+                <h3 id="passwordModalTitle">File Encrypted</h3>
                 <p>Please enter the decryption password to proceed with the download.</p>
             </div>
             <div class="modal-body">
                 <div class="password-input-wrapper">
-                    <input type="password" id="decryptionPassword" placeholder="Enter password">
-                    <div class="security-glow"></div>
+                    <input type="password" id="decryptionPassword"
+                           placeholder="Enter password"
+                           aria-label="Decryption password"
+                           autocomplete="current-password">
+                    <div class="security-glow" aria-hidden="true"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="cancelModal" class="btn-text">Cancel</button>
-                <button id="confirmDecryption" class="btn btn-primary btn-small">Unlock & Download</button>
+                <button id="cancelModal" class="btn-text" aria-label="Cancel decryption">Cancel</button>
+                <button id="confirmDecryption" class="btn btn-primary btn-small" aria-label="Unlock and download file">Unlock & Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="filePreviewModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="filePreviewModalTitle">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="security-icon-bg" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" class="modal-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                </div>
+                <h3 id="filePreviewModalTitle">File Preview</h3>
+                <p id="filePreviewModalSubtitle">Previewing file from your secure vault</p>
+            </div>
+            <div class="modal-body file-preview-modal-body" id="filePreviewModalBody">
+                <!-- Populated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button id="cancelFilePreview" class="btn-text" aria-label="Close preview">Close</button>
+                <button id="downloadFromPreview" class="btn btn-primary btn-small" aria-label="Download this file">
+                    <svg viewBox="0 0 24 24" class="btn-icon" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    Download
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Blockchain Verification Modal -->
-    <div id="blockchainModal" class="modal-backdrop">
+    <div id="blockchainModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="blockchainModalTitle">
         <div class="modal-card modal-card-wide">
             <div class="modal-header">
-                <div class="security-icon-bg" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+                <div class="security-icon-bg" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="modal-icon" style="fill:#22c55e;"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C6.72 18.81 7.86 17.2 9 16.05C9 16.03 9 16.02 9 16C9 14.34 10.34 13 12 13C13.66 13 15 14.34 15 16C15 17.66 13.66 19 12 19C11.76 19 11.52 18.97 11.3 18.91C10.5 19.7 9.61 20.58 8.57 21.57C9.62 21.83 10.79 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 13.68 2.42 15.26 3.15 16.65C4.39 13.68 7.33 9.93 17 8Z"/></svg>
                 </div>
-                <h3>Blockchain Record</h3>
+                <h3 id="blockchainModalTitle">Blockchain Record</h3>
                 <p>Immutable ownership registered on Polygon network</p>
             </div>
             <div class="modal-body" id="blockchainModalBody"></div>
             <div class="modal-footer">
-                <button id="closeBlockchainModal" class="btn btn-primary btn-small">Close</button>
+                <button id="closeBlockchainModal" class="btn btn-primary btn-small" aria-label="Close blockchain record">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Wallet Connect Modal -->
-    <div id="walletModal" class="modal-backdrop">
+    <div id="walletModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="walletModalTitle">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="security-icon-bg" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
+                <div class="security-icon-bg" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="modal-icon" style="fill:#f59e0b;"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
                 </div>
-                <h3>Connect Wallet</h3>
+                <h3 id="walletModalTitle">Connect Wallet</h3>
                 <p>Connect your wallet to enable blockchain-verified storage ownership</p>
             </div>
             <div class="modal-body">
-                <div class="wallet-options">
-                    <button class="wallet-option-btn" data-wallet="metamask">
-                        <div class="wallet-option-icon">🦊</div>
+                <div class="wallet-options" role="list">
+                    <button class="wallet-option-btn" data-wallet="metamask"
+                            aria-label="Connect MetaMask wallet" role="listitem">
+                        <div class="wallet-option-icon" aria-hidden="true">🦊</div>
                         <div class="wallet-option-info">
                             <span class="wallet-option-name">MetaMask</span>
                             <span class="wallet-option-desc">Browser Extension Wallet</span>
                         </div>
                     </button>
-                    <button class="wallet-option-btn" data-wallet="walletconnect">
-                        <div class="wallet-option-icon">🔗</div>
+                    <button class="wallet-option-btn" data-wallet="walletconnect"
+                            aria-label="Connect WalletConnect wallet" role="listitem">
+                        <div class="wallet-option-icon" aria-hidden="true">🔗</div>
                         <div class="wallet-option-info">
                             <span class="wallet-option-name">WalletConnect</span>
                             <span class="wallet-option-desc">Mobile & Desktop Wallets</span>
                         </div>
                     </button>
-                    <button class="wallet-option-btn" data-wallet="coinbase">
-                        <div class="wallet-option-icon">🔵</div>
+                    <button class="wallet-option-btn" data-wallet="coinbase"
+                            aria-label="Connect Coinbase wallet" role="listitem">
+                        <div class="wallet-option-icon" aria-hidden="true">🔵</div>
                         <div class="wallet-option-info">
                             <span class="wallet-option-name">Coinbase Wallet</span>
                             <span class="wallet-option-desc">Self-Custody Wallet</span>
@@ -650,24 +742,26 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="closeWalletModal" class="btn-text">Cancel</button>
+                <button id="closeWalletModal" class="btn-text" aria-label="Cancel wallet connection">Cancel</button>
             </div>
         </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="modal-backdrop">
+    <div id="deleteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="security-icon-bg" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);">
+                <div class="security-icon-bg" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="modal-icon" style="fill:#ef4444;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                 </div>
-                <h3>Delete File</h3>
+                <h3 id="deleteModalTitle">Delete File</h3>
                 <p id="deleteModalFileName">Are you sure you want to permanently delete this file?</p>
             </div>
             <div class="modal-footer">
-                <button id="cancelDelete" class="btn-text">Cancel</button>
-                <button id="confirmDelete" class="btn btn-primary btn-small" style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #ef4444;">Delete Permanently</button>
+                <button id="cancelDelete" class="btn-text" aria-label="Cancel file deletion">Cancel</button>
+                <button id="confirmDelete" class="btn btn-primary btn-small"
+                        style="background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #ef4444;"
+                        aria-label="Confirm permanent file deletion">Delete Permanently</button>
             </div>
         </div>
     </div>

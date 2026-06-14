@@ -12,6 +12,7 @@
    ├── ui/nodes         IPFS node distribution visualizer
    ├── ui/wallet        MetaMask / WalletConnect integration
    ├── ui/toast         Enterprise notification system
+   ├── ui/preview       File preview modal (PDF/image/text)
    └── core/app         Main app controller (preserved visual flow)
 ================================================================ */
 
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
        CONFIG
     ============================================================ */
     const CONFIG = {
-        API_BASE: 'https://apexa-vault-2.onrender.com/api',   // Change to your backend URL
+        API_BASE: 'https://apexa-vault-2.onrender.com/api',
         TOKEN_KEY: 'apexa_token',
         REFRESH_KEY: 'apexa_refresh_token',
         USER_KEY: 'apexa_current_user',
@@ -30,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ============================================================
        API CLIENT — Centralized, JWT-injecting fetch wrapper
-       Handles: auth headers, token refresh, 401 redirect, errors
     ============================================================ */
     const ApiClient = {
 
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         async _handleResponse(response) {
-            // Token expired — redirect to login
             if (response.status === 401) {
                 const body = await response.json().catch(() => ({}));
                 if (body.code === 'TOKEN_EXPIRED' || body.message?.includes('expired')) {
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         this._forceLogout();
                         throw new Error('Session expired. Please log in again.');
                     }
-                    // Caller should retry — throw a special sentinel
                     throw { _retry: true };
                 }
                 this._forceLogout();
@@ -156,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         async postForm(path, formData) {
-            // No Content-Type header — browser sets multipart boundary automatically
             const doRequest = () => fetch(`${CONFIG.API_BASE}${path}`, {
                 method: 'POST',
                 headers: this._buildHeaders(),
@@ -191,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
-        // Raw binary download — returns Blob
         async getBinary(path) {
             const token = this._getToken();
             const headers = { 'Accept': '*/*' };
@@ -204,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return resp.blob();
         },
 
-        // POST body → Blob download (for decrypt-download)
         async postBinary(path, body) {
             const token = this._getToken();
             const headers = { 'Content-Type': 'application/json', 'Accept': '*/*' };
@@ -287,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('encryptionPassword', encryptionPassword);
             }
 
-            // Use XHR for real upload progress tracking
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 const token = localStorage.getItem(CONFIG.TOKEN_KEY);
@@ -322,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 xhr.open('POST', `${CONFIG.API_BASE}/files/upload`);
                 if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-                xhr.timeout = 120000; // 2 min
+                xhr.timeout = 120000;
                 xhr.send(formData);
             });
         },
@@ -343,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ============================================================
-       UTILITY — trigger browser file download
+       UTILITY
     ============================================================ */
     function triggerBlobDownload(blob, fileName) {
         const url = URL.createObjectURL(blob);
@@ -366,6 +360,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateSecureId(len = 16) {
         const arr = crypto.getRandomValues(new Uint8Array(len));
         return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+        if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
+        return `${(bytes / 1073741824).toFixed(2)} GB`;
     }
 
     /* ============================================================
@@ -512,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ============================================================
-       BLOCKCHAIN LEDGER UI — reads from backend API data
+       BLOCKCHAIN LEDGER UI
     ============================================================ */
     const BlockchainLedgerUI = {
 
@@ -540,7 +541,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blockNum = rec.blockNumber || '—';
                 const fileId = file._id || file.id || '';
                 return `
-                    <div class="chain-record" data-file-id="${fileId}" onclick="window._apexaShowBlockchainRecord('${fileId}')">
+                    <div class="chain-record" data-file-id="${fileId}"
+                         tabindex="0" role="button"
+                         aria-label="View blockchain record for ${file.name || file.originalName || 'file'}"
+                         onclick="window._apexaShowBlockchainRecord('${fileId}')"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window._apexaShowBlockchainRecord('${fileId}')}">
                         <span class="chain-block-num">#${String(blockNum).slice(-5)}</span>
                         <div class="chain-record-info">
                             <span class="chain-record-file">${file.name || file.originalName || 'File'}</span>
@@ -662,15 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
             toast.innerHTML = `
-                <div class="toast-icon-wrapper">
+                <div class="toast-icon-wrapper" aria-hidden="true">
                     <svg viewBox="0 0 24 24" class="toast-icon">${icons[type] || icons.info}</svg>
                 </div>
                 <div class="toast-content">
                     <span class="toast-title">${title || { success: 'Success', error: 'Error', info: 'Info' }[type]}</span>
                     <span class="toast-message">${message}</span>
                 </div>
-                <div class="toast-progress"></div>`;
+                <div class="toast-progress" aria-hidden="true"></div>`;
 
             container.appendChild(toast);
             const timer = setTimeout(() => this._remove(toast), 4000);
@@ -687,11 +694,10 @@ document.addEventListener('DOMContentLoaded', () => {
         info(msg, title) { this.show(msg, 'info', title); }
     };
 
-    // Global references for inline HTML handlers
     window._apexaShowToast = (msg, type, title) => Toast.show(msg, type, title);
 
     /* ============================================================
-       ACTIVITY LOG — Server-side aware (renders from API data)
+       ACTIVITY LOG
     ============================================================ */
     const ActivityUI = {
         render(activities) {
@@ -727,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             listEl.innerHTML = activities.slice(0, 15).map(act => `
                 <div class="activity-item activity-type-${act.type}">
-                    <div class="activity-icon-wrapper">
+                    <div class="activity-icon-wrapper" aria-hidden="true">
                         <svg viewBox="0 0 24 24" class="activity-icon">${icons[act.type] || icons.ipfs}</svg>
                     </div>
                     <div class="activity-info">
@@ -750,7 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const encrypted = files.filter(f => f.encrypted || f.isEncrypted).length;
             const chainVerified = files.filter(f => f.blockchainRecord || f.txHash).length;
             const totalBytes = files.reduce((a, f) => a + (f.sizeInBytes || f.size || 0), 0);
-
             const avgMB = total ? (totalBytes / total / (1024 * 1024)).toFixed(1) : 0;
 
             const insights = [];
@@ -778,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = insights.map(i => `
                 <div class="insight-item">
                     <div class="insight-header">
-                        <svg viewBox="0 0 24 24" class="insight-icon">${i.icon}</svg>
+                        <svg viewBox="0 0 24 24" class="insight-icon" aria-hidden="true">${i.icon}</svg>
                         <span class="insight-label">${i.label}</span>
                     </div>
                     <p>${i.text}</p>
@@ -807,12 +812,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const sv = document.getElementById('storageValue');
             const pb = document.getElementById('storageProgress');
             const sd = document.getElementById('storageDesc');
+            const progressBar = document.getElementById('storageProgressBar');
 
             if (sv) sv.textContent = `${usedText} / ${quotaGB} GB`;
             if (pb) pb.style.width = `${Math.max(pct, 2)}%`;
             if (sd) sd.textContent = `${pct.toFixed(1)}% utilized. ${remaining} GB remaining on IPFS network.`;
+            if (progressBar) progressBar.setAttribute('aria-valuenow', Math.round(pct));
 
-            // Update settings modal
             const sp = document.getElementById('storagePlanDisplay');
             if (sp) sp.textContent = `Premium (${quotaGB} GB)`;
         }
@@ -826,14 +832,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const FilesUI = {
         render(files) {
             _currentFiles = files || [];
-            SearchService.reset();   // clear stale DOM state before re-render
+            SearchService.reset();
             const listEl = document.getElementById('recentFilesList');
             if (!listEl) return;
 
             if (!files || files.length === 0) {
                 listEl.innerHTML = `
                     <div class="empty-state">
-                        <svg viewBox="0 0 24 24" class="empty-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <svg viewBox="0 0 24 24" class="empty-icon" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         <p>Your vault is empty</p>
                         <span>Secure your first file to begin monitoring your storage.</span>
                     </div>`;
@@ -852,37 +858,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? new Date(file.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                     : (file.date || '—');
                 const ext = (name.split('.').pop() || 'file').toUpperCase();
+                const isPreviewable = /^(pdf|png|jpg|jpeg|gif|webp|txt|md|json|csv)$/i.test(name.split('.').pop() || '');
 
                 return `
-                    <div class="file-card-item" data-id="${id}">
-                        <div class="file-icon-wrapper">
+                    <div class="file-card-item" data-id="${id}" data-name="${name}">
+                        <div class="file-icon-wrapper" aria-hidden="true">
                             <svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         </div>
                         <div class="file-card-info">
                             <span class="file-card-name">${name}</span>
                             <div class="file-card-meta">
-                                ${isEnc ? `<span class="badge-encrypted">
-                                    <svg viewBox="0 0 24 24" class="lock-icon-small"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                ${isEnc ? `<span class="badge-encrypted" aria-label="AES-256 encrypted">
+                                    <svg viewBox="0 0 24 24" class="lock-icon-small" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                                     AES-256
                                 </span>` : ''}
-                                ${cid ? `<span class="badge-ipfs">IPFS</span>` : ''}
-                                ${hasChain ? `<span class="badge-chain">On-Chain</span>` : ''}
-                                <span>•</span><span>${ext}</span>
-                                <span>•</span><span>${sizeStr}</span>
-                                <span>•</span><span>${dateStr}</span>
+                                ${cid ? `<span class="badge-ipfs" aria-label="Stored on IPFS">IPFS</span>` : ''}
+                                ${hasChain ? `<span class="badge-chain" aria-label="Verified on blockchain">On-Chain</span>` : ''}
+                                <span aria-hidden="true">•</span><span>${ext}</span>
+                                <span aria-hidden="true">•</span><span>${sizeStr}</span>
+                                <span aria-hidden="true">•</span><span>${dateStr}</span>
                             </div>
-                            ${shortCID ? `<span class="file-cid">ipfs://${shortCID}</span>` : ''}
+                            ${shortCID ? `<span class="file-cid" aria-label="IPFS CID: ${cid}">ipfs://${shortCID}</span>` : ''}
                         </div>
-                        <div class="file-actions">
+                        <div class="file-actions" role="group" aria-label="Actions for ${name}">
                             ${hasChain ? `
-                                <button class="action-btn chain-verify" title="View Blockchain Record">
-                                    <svg viewBox="0 0 24 24" class="action-icon"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C6.72 18.81 7.86 17.2 9 16.05C9 16.03 9 16.02 9 16C9 14.34 10.34 13 12 13C13.66 13 15 14.34 15 16C15 17.66 13.66 19 12 19C11.76 19 11.52 18.97 11.3 18.91C10.5 19.7 9.61 20.58 8.57 21.57C9.62 21.83 10.79 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 13.68 2.42 15.26 3.15 16.65C4.39 13.68 7.33 9.93 17 8Z"/></svg>
+                                <button class="action-btn chain-verify" title="View Blockchain Record" aria-label="View blockchain record for ${name}">
+                                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M17 8C8 10 5.9 16.17 3.82 21H5.71C6.72 18.81 7.86 17.2 9 16.05C9 16.03 9 16.02 9 16C9 14.34 10.34 13 12 13C13.66 13 15 14.34 15 16C15 17.66 13.66 19 12 19C11.76 19 11.52 18.97 11.3 18.91C10.5 19.7 9.61 20.58 8.57 21.57C9.62 21.83 10.79 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2C6.48 2 2 6.48 2 12C2 13.68 2.42 15.26 3.15 16.65C4.39 13.68 7.33 9.93 17 8Z"/></svg>
                                 </button>` : ''}
-                            <button class="action-btn download-btn" title="Download">
-                                <svg viewBox="0 0 24 24" class="action-icon"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            ${isPreviewable ? `
+                                <button class="action-btn preview-btn" title="Preview File" aria-label="Preview ${name}">
+                                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                                </button>` : ''}
+                            <button class="action-btn download-btn" title="Download" aria-label="Download ${name}">
+                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                             </button>
-                            <button class="action-btn delete-btn delete" title="Delete">
-                                <svg viewBox="0 0 24 24" class="action-icon"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            <button class="action-btn delete-btn delete" title="Delete" aria-label="Delete ${name}">
+                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                             </button>
                         </div>
                     </div>`;
@@ -891,7 +902,139 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ============================================================
-       BLOCKCHAIN RECORD MODAL — reads from _currentFiles
+       FILE PREVIEW MODAL — PDF, Image, Text
+    ============================================================ */
+    let _previewObjectUrl = null;
+    let _previewFileForDownload = null;
+
+    const FilePreviewUI = {
+
+        _previewableTypes: {
+            image: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'],
+            pdf: ['pdf'],
+            text: ['txt', 'md', 'json', 'csv', 'log', 'xml', 'yaml', 'yml', 'js', 'ts', 'html', 'css']
+        },
+
+        getType(fileName) {
+            const ext = (fileName.split('.').pop() || '').toLowerCase();
+            if (this._previewableTypes.image.includes(ext)) return 'image';
+            if (this._previewableTypes.pdf.includes(ext)) return 'pdf';
+            if (this._previewableTypes.text.includes(ext)) return 'text';
+            return null;
+        },
+
+        async show(file) {
+            const modal = document.getElementById('filePreviewModal');
+            const body = document.getElementById('filePreviewModalBody');
+            const subtitle = document.getElementById('filePreviewModalSubtitle');
+            const downloadBtn = document.getElementById('downloadFromPreview');
+            const cancelBtn = document.getElementById('cancelFilePreview');
+
+            if (!modal || !body) return;
+
+            const name = file.name || file.originalName || 'File';
+            const id = file._id || file.id;
+            const isEnc = file.encrypted || file.isEncrypted;
+            const sizeStr = file.sizeFormatted || file.size || '—';
+            const type = this.getType(name);
+
+            // Store reference for download button
+            _previewFileForDownload = file;
+
+            // Update subtitle
+            if (subtitle) subtitle.textContent = name;
+
+            // Build file info row
+            const infoHTML = `
+                <div class="preview-file-info">
+                    <div class="file-icon-wrapper" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    </div>
+                    <div class="preview-file-details">
+                        <span class="preview-file-name">${name}</span>
+                        <span class="preview-file-meta">${sizeStr}${isEnc ? ' · AES-256 Encrypted' : ''}</span>
+                    </div>
+                </div>`;
+
+            // If encrypted, we can't preview — show info + decrypt download option
+            if (isEnc) {
+                body.innerHTML = `
+                    ${infoHTML}
+                    <div class="preview-unsupported">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                        <p>File is encrypted — preview unavailable</p>
+                    </div>`;
+                modal.classList.add('active');
+                cancelBtn?.addEventListener('click', () => this.close(), { once: true });
+                modal.addEventListener('click', e => { if (e.target === modal) this.close(); }, { once: true });
+                return;
+            }
+
+            // Loading state
+            body.innerHTML = `
+                ${infoHTML}
+                <div class="cid-result-loading">
+                    <div class="cid-spinner" aria-hidden="true"></div>
+                    <span>Loading preview...</span>
+                </div>`;
+            modal.classList.add('active');
+
+            try {
+                const blob = await ApiClient.getBinary(`/files/${id}/download`);
+                this._revokeOldUrl();
+                _previewObjectUrl = URL.createObjectURL(blob);
+
+                let previewHTML = '';
+
+                if (type === 'image') {
+                    previewHTML = `<img class="preview-img" src="${_previewObjectUrl}" alt="Preview of ${name}" loading="lazy">`;
+                } else if (type === 'pdf') {
+                    previewHTML = `<iframe class="preview-pdf" src="${_previewObjectUrl}" title="PDF preview of ${name}" aria-label="PDF preview of ${name}"></iframe>`;
+                } else if (type === 'text') {
+                    const text = await blob.text();
+                    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    previewHTML = `<pre class="preview-text" tabindex="0" aria-label="Text content of ${name}">${escaped}</pre>`;
+                } else {
+                    previewHTML = `
+                        <div class="preview-unsupported">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                            <p>Preview not available for this file type</p>
+                        </div>`;
+                }
+
+                body.innerHTML = `${infoHTML}${previewHTML}`;
+
+            } catch (err) {
+                body.innerHTML = `
+                    ${infoHTML}
+                    <div class="cid-result-error">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        <span>Could not load preview: ${err.message}</span>
+                    </div>`;
+            }
+
+            // Event listeners
+            cancelBtn?.addEventListener('click', () => this.close(), { once: true });
+            modal.addEventListener('click', e => { if (e.target === modal) this.close(); }, { once: true });
+        },
+
+        close() {
+            const modal = document.getElementById('filePreviewModal');
+            if (modal) modal.classList.remove('active');
+            this._revokeOldUrl();
+            _previewFileForDownload = null;
+        },
+
+        _revokeOldUrl() {
+            if (_previewObjectUrl) {
+                URL.revokeObjectURL(_previewObjectUrl);
+                _previewObjectUrl = null;
+            }
+        }
+    };
+
+    /* ============================================================
+       BLOCKCHAIN RECORD MODAL
     ============================================================ */
     window._apexaShowBlockchainRecord = (fileId) => {
         const file = _currentFiles.find(f => (f._id || f.id) === fileId);
@@ -936,18 +1079,54 @@ document.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', () => {
                 const sectionId = item.getAttribute('data-section');
                 if (!sectionId) return;
-                if (sectionId === 'settings') { settingsModal.classList.add('active'); return; }
+                if (sectionId === 'settings') {
+                    settingsModal.classList.add('active');
+                    // Focus first focusable element in modal
+                    setTimeout(() => {
+                        const firstFocusable = settingsModal.querySelector('button, input, [tabindex]');
+                        if (firstFocusable) firstFocusable.focus();
+                    }, 100);
+                    return;
+                }
                 const section = document.getElementById(sectionId);
                 if (section) {
-                    navItems.forEach(n => n.classList.remove('active'));
+                    navItems.forEach(n => {
+                        n.classList.remove('active');
+                        n.removeAttribute('aria-current');
+                    });
                     item.classList.add('active');
+                    item.setAttribute('aria-current', 'page');
                     section.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
         });
 
-        if (closeSettings) closeSettings.addEventListener('click', () => settingsModal.classList.remove('active'));
-        settingsModal.addEventListener('click', e => { if (e.target === settingsModal) settingsModal.classList.remove('active'); });
+        if (closeSettings) {
+            closeSettings.addEventListener('click', () => {
+                settingsModal.classList.remove('active');
+            });
+        }
+        settingsModal.addEventListener('click', e => {
+            if (e.target === settingsModal) settingsModal.classList.remove('active');
+        });
+
+        // Trap focus in modal
+        settingsModal.addEventListener('keydown', e => {
+            if (!settingsModal.classList.contains('active')) return;
+            if (e.key === 'Escape') {
+                settingsModal.classList.remove('active');
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            const focusable = settingsModal.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])');
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey) {
+                if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+            } else {
+                if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+        });
     };
 
     /* ============================================================
@@ -965,6 +1144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ws = document.getElementById('walletStatus');
                     if (ws) ws.textContent = 'Not Connected';
                     connectBtn.textContent = 'Connect';
+                    connectBtn.setAttribute('aria-label', 'Connect crypto wallet');
                     Toast.info('Wallet disconnected.', 'Wallet');
                 } else {
                     walletModal.classList.add('active');
@@ -974,6 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (closeWalletModal) closeWalletModal.addEventListener('click', () => walletModal.classList.remove('active'));
         walletModal.addEventListener('click', e => { if (e.target === walletModal) walletModal.classList.remove('active'); });
+        walletModal.addEventListener('keydown', e => { if (e.key === 'Escape') walletModal.classList.remove('active'); });
 
         document.querySelectorAll('.wallet-option-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -988,7 +1169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.success) {
                         const ws = document.getElementById('walletStatus');
                         if (ws) ws.textContent = WalletService.formatAddress(result.address);
-                        if (connectBtn) connectBtn.textContent = 'Disconnect';
+                        if (connectBtn) {
+                            connectBtn.textContent = 'Disconnect';
+                            connectBtn.setAttribute('aria-label', 'Disconnect crypto wallet');
+                        }
                         Toast.success(`Connected: ${WalletService.formatAddress(result.address)}`, 'Wallet Connected');
                     }
                 } catch (err) {
@@ -1000,6 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ============================================================
        UPLOAD INTERACTIONS — Real multipart/form-data to backend
+       Includes: drag-drop, keyboard support, real progress
     ============================================================ */
     const setupUploadInteractions = () => {
         const dropZone = document.getElementById('dropZone');
@@ -1014,28 +1199,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let pendingFiles = [];
 
+        // ── Encryption toggle ─────────────────────────────────
         encryptToggle.addEventListener('change', () => {
             if (encryptToggle.checked) {
                 encryptionPasswordWrapper.classList.add('active');
+                encryptionPasswordWrapper.removeAttribute('aria-hidden');
                 encryptionPassword.focus();
                 if (pendingFiles.length > 0) secureUploadBtn.classList.add('visible');
             } else {
                 encryptionPasswordWrapper.classList.remove('active');
+                encryptionPasswordWrapper.setAttribute('aria-hidden', 'true');
                 encryptionPassword.value = '';
                 secureUploadBtn.classList.remove('visible');
             }
         });
 
+        // ── Click to open file picker ──────────────────────────
         dropZone.addEventListener('click', () => fileInput.click());
+
+        // ── Keyboard activation (Enter / Space) ───────────────
+        dropZone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        // ── File input change ─────────────────────────────────
         fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
+        // ── Drag and drop ─────────────────────────────────────
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
             dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, false);
         });
-        ['dragenter', 'dragover'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.add('drag-over'), false));
-        ['dragleave', 'drop'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'), false));
+
+        ['dragenter', 'dragover'].forEach(ev => {
+            dropZone.addEventListener(ev, () => {
+                dropZone.classList.add('drag-over');
+                dropZone.setAttribute('aria-label', 'Drop files here to upload');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(ev => {
+            dropZone.addEventListener(ev, () => {
+                dropZone.classList.remove('drag-over');
+                dropZone.setAttribute('aria-label', 'Upload files — click, press Enter, or drag and drop files here');
+            }, false);
+        });
+
         dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files), false);
 
+        // ── Handle selected files ─────────────────────────────
         const handleFiles = (files) => {
             const list = Array.from(files);
             if (!list.length) return;
@@ -1048,6 +1262,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        // ── Upload process with real progress ─────────────────
         const processUpload = async (fileList) => {
             if (!AuthService.isAuthenticated()) {
                 Toast.error('Please log in to upload files.', 'Not Authenticated');
@@ -1067,19 +1282,29 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPreviews(fileList, isEncrypted);
 
             try {
-                // Animate pipeline steps while upload happens
                 await PipelineUI.activateStep(0, isEncrypted ? 'Encrypting with AES-256-GCM...' : 'Preparing files...');
                 await PipelineUI.activateStep(1, 'Computing integrity hash...');
 
                 NodeService.highlightStoringNodes();
-
                 await PipelineUI.activateStep(2, 'Uploading to IPFS via Pinata...');
 
+                // Real progress: update pipeline status text with actual %
                 const result = await FileService.upload(
                     fileList,
                     isEncrypted,
                     password,
-                    (pct, label) => PipelineUI.setStatus(label)
+                    (pct, label) => {
+                        PipelineUI.setStatus(label);
+                        // Also update progress fills in preview items
+                        document.querySelectorAll('.upload-progress-fill').forEach(fill => {
+                            fill.style.width = pct + '%';
+                            const pctEl = fill.closest('.file-preview-item')?.querySelector('.upload-pct-display');
+                            if (pctEl) {
+                                pctEl.textContent = pct + '%';
+                                if (pct >= 100) pctEl.classList.add('complete');
+                            }
+                        });
+                    }
                 );
 
                 await PipelineUI.activateStep(3, 'Registering on Polygon blockchain...');
@@ -1087,9 +1312,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 NodeService.resetStoringNodes();
                 await PipelineUI.completeAll();
 
+                // Mark all progress fills complete
+                document.querySelectorAll('.upload-progress-fill').forEach(f => f.classList.add('complete'));
+                document.querySelectorAll('.upload-pct-display').forEach(el => {
+                    el.textContent = '100%';
+                    el.classList.add('complete');
+                });
+
                 // Reset controls
                 encryptToggle.checked = false;
                 encryptionPasswordWrapper.classList.remove('active');
+                encryptionPasswordWrapper.setAttribute('aria-hidden', 'true');
                 encryptionPassword.value = '';
                 secureUploadBtn.classList.remove('visible');
                 pendingFiles = [];
@@ -1103,7 +1336,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     LocalActivity.push('upload', `Uploaded ${fileList.length} file(s) → IPFS`);
                 }
 
-                // Refresh dashboard data
                 await loadDashboardData();
 
             } catch (err) {
@@ -1118,45 +1350,52 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pendingFiles.length > 0) processUpload(pendingFiles);
         });
 
+        // ── Render file previews with real progress bar ───────
         const renderPreviews = (files, isStaging = false) => {
             filePreviewContainer.style.display = 'flex';
             filePreviewContainer.innerHTML = '';
             files.forEach((file, index) => {
-                const sizeStr = file.size < 1048576
-                    ? `${(file.size / 1024).toFixed(1)} KB`
-                    : `${(file.size / 1048576).toFixed(1)} MB`;
+                const sizeStr = formatBytes(file.size);
                 const ext = (file.name.split('.').pop() || 'file').toUpperCase();
                 const fid = `file-prev-${Date.now()}-${index}`;
                 const isEnc = encryptToggle.checked;
 
                 filePreviewContainer.insertAdjacentHTML('afterbegin', `
-                    <div class="file-preview-item ${isStaging ? 'staged' : ''}" id="${fid}">
-                        <div class="file-icon-wrapper">
+                    <div class="file-preview-item ${isStaging ? 'staged' : ''}" id="${fid}"
+                         role="listitem" aria-label="${file.name}, ${sizeStr}">
+                        <div class="file-icon-wrapper" aria-hidden="true">
                             <svg viewBox="0 0 24 24" class="file-icon"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                         </div>
                         <div class="file-info">
                             <div class="preview-name-row">
                                 <span class="file-name">${file.name}</span>
-                                ${isEnc ? `<span class="preview-badge">
-                                    <svg viewBox="0 0 24 24" class="lock-icon-small"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                ${isEnc ? `<span class="preview-badge" aria-label="Will be encrypted">
+                                    <svg viewBox="0 0 24 24" class="lock-icon-small" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                                     Encrypted
                                 </span>` : ''}
                             </div>
                             <span class="file-meta">${ext} · ${sizeStr} · ${isStaging ? 'Ready to Secure' : 'Processing...'}</span>
-                        </div>
-                        <div class="upload-progress-mock">
-                            <div class="upload-progress-fill" id="progress-${fid}"></div>
+                            <div class="upload-progress-real" role="progressbar" aria-label="Upload progress for ${file.name}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                <div class="upload-progress-mock">
+                                    <div class="upload-progress-fill" id="progress-${fid}"></div>
+                                </div>
+                                <span class="upload-pct-display" aria-hidden="true">0%</span>
+                            </div>
                         </div>
                     </div>`);
             });
+
+            // Animate to 5% immediately so users see activity
             setTimeout(() => {
-                document.querySelectorAll('.upload-progress-fill:not(.complete)').forEach(f => f.classList.add('complete'));
-            }, 200);
+                document.querySelectorAll('.upload-progress-fill').forEach(f => {
+                    f.style.width = '5%';
+                });
+            }, 100);
         };
     };
 
     /* ============================================================
-       FILE ACTIONS — Download, Delete, Chain
+       FILE ACTIONS — Download, Delete, Chain, Preview
     ============================================================ */
     const setupFileActions = () => {
         const listEl = document.getElementById('recentFilesList');
@@ -1166,14 +1405,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const downloadBtn = e.target.closest('.download-btn');
             const deleteBtn = e.target.closest('.delete-btn');
             const chainBtn = e.target.closest('.chain-verify');
+            const previewBtn = e.target.closest('.preview-btn');
             const fileItem = e.target.closest('.file-card-item');
             if (!fileItem) return;
 
             const fileId = fileItem.dataset.id;
-            if (downloadBtn) handleDownload(fileId);
+            if (previewBtn) handlePreview(fileId);
+            else if (downloadBtn) handleDownload(fileId);
             else if (deleteBtn) promptDelete(fileId, fileItem);
             else if (chainBtn) window._apexaShowBlockchainRecord(fileId);
         };
+
+        // Keyboard support for file actions
+        listEl.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const btn = e.target.closest('.action-btn');
+            if (btn) {
+                e.preventDefault();
+                btn.click();
+            }
+        });
+    };
+
+    const handlePreview = async (fileId) => {
+        const file = _currentFiles.find(f => (f._id || f.id) === fileId);
+        if (!file) { Toast.error('File not found.', 'Preview Error'); return; }
+        await FilePreviewUI.show(file);
+    };
+
+    // Setup download button in preview modal
+    const setupPreviewModal = () => {
+        const downloadBtn = document.getElementById('downloadFromPreview');
+        const cancelBtn = document.getElementById('cancelFilePreview');
+        const modal = document.getElementById('filePreviewModal');
+
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', async () => {
+                if (!_previewFileForDownload) return;
+                const file = _previewFileForDownload;
+                FilePreviewUI.close();
+                await handleDownload(file._id || file.id);
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => FilePreviewUI.close());
+        }
+
+        if (modal) {
+            modal.addEventListener('keydown', e => {
+                if (e.key === 'Escape') FilePreviewUI.close();
+            });
+        }
     };
 
     const handleDownload = async (fileId) => {
@@ -1205,13 +1488,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modal.classList.add('active');
         input.value = '';
-        input.focus();
+        setTimeout(() => input.focus(), 100);
 
         const cleanup = () => {
             modal.classList.remove('active');
             confirmBtn.onclick = null;
             cancelBtn.onclick = null;
             input.onkeypress = null;
+            modal.onkeydown = null;
         };
 
         const handleConfirm = async () => {
@@ -1233,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.style.borderColor = '#ef4444';
                 input.value = '';
                 input.focus();
-                setTimeout(() => input.style.borderColor = '', 1200);
+                setTimeout(() => { input.style.borderColor = ''; }, 1200);
             } finally {
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Unlock & Download';
@@ -1243,6 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmBtn.onclick = handleConfirm;
         cancelBtn.onclick = cleanup;
         input.onkeypress = e => { if (e.key === 'Enter') handleConfirm(); };
+        modal.onkeydown = e => { if (e.key === 'Escape') cleanup(); };
     };
 
     const promptDelete = (fileId, fileItemEl) => {
@@ -1255,11 +1540,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nameEl) nameEl.textContent = `Permanently delete "${name}" from IPFS?`;
         modal.classList.add('active');
+        setTimeout(() => confirmBtn?.focus(), 100);
 
         const cleanup = () => {
             modal.classList.remove('active');
             confirmBtn.onclick = null;
             cancelBtn.onclick = null;
+            modal.onclick = null;
+            modal.onkeydown = null;
         };
 
         confirmBtn.onclick = async () => {
@@ -1269,6 +1557,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cancelBtn.onclick = cleanup;
         modal.onclick = e => { if (e.target === modal) cleanup(); };
+        modal.onkeydown = e => { if (e.key === 'Escape') cleanup(); };
     };
 
     const performDelete = async (fileId, fileItemEl) => {
@@ -1292,18 +1581,20 @@ document.addEventListener('DOMContentLoaded', () => {
        BLOCKCHAIN / CHAIN MODALS
     ============================================================ */
     const setupChainModals = () => {
-        document.getElementById('closeBlockchainModal')?.addEventListener('click', () => {
-            document.getElementById('blockchainModal')?.classList.remove('active');
+        const closeBtn = document.getElementById('closeBlockchainModal');
+        const modal = document.getElementById('blockchainModal');
+
+        closeBtn?.addEventListener('click', () => modal?.classList.remove('active'));
+        modal?.addEventListener('click', e => {
+            if (e.target === modal) modal.classList.remove('active');
         });
-        document.getElementById('blockchainModal')?.addEventListener('click', e => {
-            if (e.target === document.getElementById('blockchainModal')) {
-                document.getElementById('blockchainModal').classList.remove('active');
-            }
+        modal?.addEventListener('keydown', e => {
+            if (e.key === 'Escape') modal.classList.remove('active');
         });
     };
 
     /* ============================================================
-       LOCAL ACTIVITY LOG — fallback when backend has no /api/activities
+       LOCAL ACTIVITY LOG
     ============================================================ */
     const LocalActivity = {
         _key: () => `apexa_activity_${AuthService.getCurrentUser()?.id || 'anon'}`,
@@ -1325,29 +1616,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ============================================================
-       SEARCH SERVICE — real-time filter over _currentFiles
+       SEARCH SERVICE
     ============================================================ */
     const SearchService = {
         _query: '',
 
         attach() {
-            // Desktop header search
             const desktopInput = document.querySelector('.header-search input');
             if (desktopInput) {
                 desktopInput.addEventListener('input', e => {
                     this._query = e.target.value.trim().toLowerCase();
-                    // mirror to mobile
                     const mob = document.getElementById('mobileSearchInput');
                     if (mob && document.activeElement !== mob) mob.value = e.target.value;
                     this._filter();
                 });
             }
-            // Mobile search bar
             const mobileInput = document.getElementById('mobileSearchInput');
             if (mobileInput) {
                 mobileInput.addEventListener('input', e => {
                     this._query = e.target.value.trim().toLowerCase();
-                    // mirror to desktop
                     if (desktopInput && document.activeElement !== desktopInput) desktopInput.value = e.target.value;
                     this._filter();
                 });
@@ -1379,7 +1666,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Show no-results message if needed
             let noRes = document.getElementById('searchNoResults');
             const listEl = document.getElementById('recentFilesList');
             if (q && visibleCount === 0 && items.length > 0) {
@@ -1388,6 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     noRes.id = 'searchNoResults';
                     noRes.className = 'empty-state';
                     noRes.style.padding = '1.5rem 0';
+                    noRes.setAttribute('role', 'status');
                     noRes.innerHTML = `<p>No results for "<em>${q}</em>"</p><span>Try searching by filename, CID, or file type.</span>`;
                     listEl.appendChild(noRes);
                 } else {
@@ -1416,7 +1703,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isValidCID(cid) {
             const trimmed = cid.trim();
-            // CIDv0: Qm... 46 chars; CIDv1: bafybei... base32
             return /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(trimmed) ||
                    /^baf[a-z2-7]{50,}$/i.test(trimmed) ||
                    /^[a-zA-Z0-9]{46,60}$/.test(trimmed);
@@ -1425,18 +1711,15 @@ document.addEventListener('DOMContentLoaded', () => {
         async retrieve(rawCid) {
             const cid = rawCid.trim();
             const url = `${this.GATEWAY}${cid}`;
-
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 15000);
 
             try {
                 const resp = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeout);
-
                 if (!resp.ok) throw new Error(`Gateway returned ${resp.status}`);
 
                 const contentType = resp.headers.get('content-type') || '';
-                const contentLength = resp.headers.get('content-length');
                 const blob = await resp.blob();
                 const objectUrl = URL.createObjectURL(blob);
 
@@ -1456,10 +1739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         formatSize(bytes) {
-            if (bytes < 1024) return `${bytes} B`;
-            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-            if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
-            return `${(bytes / 1073741824).toFixed(2)} GB`;
+            return formatBytes(bytes);
         },
 
         setup() {
@@ -1474,10 +1754,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!this.isValidCID(cid)) { Toast.error('Invalid CID format. Must start with Qm or bafybei.', 'Invalid CID'); return; }
 
                 result.style.display = 'block';
-                result.innerHTML = `<div class="cid-result-loading"><div class="cid-spinner"></div><span>Fetching from IPFS gateway...</span></div>`;
+                result.innerHTML = `<div class="cid-result-loading"><div class="cid-spinner" aria-hidden="true"></div><span>Fetching from IPFS gateway...</span></div>`;
                 btn.disabled = true;
+                btn.setAttribute('aria-busy', 'true');
 
-                // Revoke any old object URL
                 const oldImg = result.querySelector('img');
                 if (oldImg?.src?.startsWith('blob:')) URL.revokeObjectURL(oldImg.src);
 
@@ -1487,26 +1767,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     result.innerHTML = `
                         <div class="cid-result-content">
-                            ${data.isImage ? `<img class="cid-result-preview" src="${data.objectUrl}" alt="IPFS file preview" loading="lazy">` : ''}
+                            ${data.isImage ? `<img class="cid-result-preview" src="${data.objectUrl}" alt="IPFS file preview for CID ${shortCid}" loading="lazy">` : ''}
                             <div class="cid-result-meta">
                                 <div class="cid-meta-row"><span class="cid-meta-key">CID</span><span class="cid-meta-val cyan">${shortCid}</span></div>
                                 <div class="cid-meta-row"><span class="cid-meta-key">Type</span><span class="cid-meta-val">${data.contentType || 'Unknown'}</span></div>
                                 <div class="cid-meta-row"><span class="cid-meta-key">Size</span><span class="cid-meta-val">${this.formatSize(data.size)}</span></div>
                                 <div class="cid-meta-row"><span class="cid-meta-key">Gateway</span><span class="cid-meta-val">Pinata</span></div>
                             </div>
-                            <a href="${data.objectUrl}" download="${cid.substring(0,16)}" class="btn btn-primary btn-small" style="display:inline-flex; gap:0.5rem; align-items:center;">
-                                <svg viewBox="0 0 24 24" style="width:1rem;height:1rem;fill:currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            <a href="${data.objectUrl}" download="${cid.substring(0,16)}"
+                               class="btn btn-primary btn-small"
+                               style="display:inline-flex; gap:0.5rem; align-items:center;"
+                               aria-label="Download file from IPFS">
+                                <svg viewBox="0 0 24 24" style="width:1rem;height:1rem;fill:currentColor;" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                                 Download File
                             </a>
                         </div>`;
                 } catch (err) {
                     result.innerHTML = `
-                        <div class="cid-result-error">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                        <div class="cid-result-error" role="alert">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                             <span>${err.message}</span>
                         </div>`;
                 } finally {
                     btn.disabled = false;
+                    btn.removeAttribute('aria-busy');
                 }
             };
 
@@ -1516,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /* ============================================================
-       LOAD DASHBOARD DATA — Fetches from backend
+       LOAD DASHBOARD DATA
     ============================================================ */
     const loadDashboardData = async () => {
         try {
@@ -1528,19 +1812,16 @@ document.addEventListener('DOMContentLoaded', () => {
             BlockchainLedgerUI.render(files);
             AIInsightsUI.update(files);
 
-            // Storage: compute from files array as primary source
             const totalBytes = files.reduce((sum, f) => sum + (f.sizeInBytes || f.fileSize || 0), 0);
             const user = AuthService.getCurrentUser();
             const usedBytes = data.storageUsed ?? totalBytes;
             const quotaBytes = data.storageQuota ?? (user?.storageQuota || CONFIG.STORAGE_QUOTA_BYTES);
             StorageUI.update(usedBytes, quotaBytes);
 
-            // Activities — try dedicated endpoint, fall back to local log
             let activities = null;
             if (data.activities) {
                 activities = data.activities;
             } else {
-                // try separate endpoint
                 try {
                     const actData = await ApiClient.get('/activities');
                     activities = actData.activities || actData.data || [];
@@ -1550,10 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             ActivityUI.render(activities);
 
-            // Re-apply search filter without resetting query
             SearchService._filter();
-
-            // Node visualization
             NodeService.activateNodes(14 + Math.floor(Math.random() * 10));
 
         } catch (err) {
@@ -1573,12 +1851,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('welcomeText').textContent = `Welcome back, ${user.username}`;
         document.getElementById('userNameDisplay').textContent = user.username;
+        document.getElementById('userNameDisplay').setAttribute('aria-label', `Signed in as ${user.username}`);
         document.getElementById('userInitial').textContent = user.username.charAt(0).toUpperCase();
 
         setupSidebarNavigation(user);
         setupFileActions();
         setupChainModals();
         setupWalletUI();
+        setupPreviewModal();
 
         document.getElementById('viewActivityBtn')?.addEventListener('click', () => {
             document.getElementById('activitySection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1590,7 +1870,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.alignItems = 'stretch';
             document.body.style.justifyContent = 'stretch';
 
-            // Initialize visual services
             const nodeGrid = document.getElementById('nodeGrid');
             if (nodeGrid) NodeService.initialize(nodeGrid);
 
@@ -1668,31 +1947,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleForms = (showRegister) => {
         if (showRegister) {
             loginTab.classList.remove('active');
+            loginTab.setAttribute('aria-selected', 'false');
             registerTab.classList.add('active');
+            registerTab.setAttribute('aria-selected', 'true');
             loginForm.classList.remove('active');
             setTimeout(() => {
                 authTitle.textContent = 'Create an account';
                 authSubtitle.textContent = 'Start your journey with Apexa today.';
                 registerForm.classList.add('active');
+                // Focus first input in register form
+                document.getElementById('regUsername')?.focus();
             }, 300);
         } else {
             registerTab.classList.remove('active');
+            registerTab.setAttribute('aria-selected', 'false');
             loginTab.classList.add('active');
+            loginTab.setAttribute('aria-selected', 'true');
             registerForm.classList.remove('active');
             setTimeout(() => {
                 authTitle.textContent = 'Welcome back';
                 authSubtitle.textContent = 'Please enter your details to sign in.';
                 loginForm.classList.add('active');
+                document.getElementById('loginEmail')?.focus();
             }, 300);
         }
     };
 
     loginTab.addEventListener('click', () => toggleForms(false));
     registerTab.addEventListener('click', () => toggleForms(true));
+
+    // Logout — desktop sidebar
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
 
+    // FIX: Mobile logout — was missing event listener
+    document.getElementById('logoutBtnMobile')?.addEventListener('click', logout);
+
     /* ============================================================
-       REGISTER FORM — POST /api/auth/register
+       REGISTER FORM
     ============================================================ */
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1718,6 +2009,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('registerSubmitBtn');
         btn.disabled = true;
         btn.textContent = 'Creating account...';
+        btn.setAttribute('aria-busy', 'true');
 
         try {
             await AuthService.register({ username, email, password, confirmPassword });
@@ -1729,11 +2021,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.textContent = 'Create Account';
+            btn.removeAttribute('aria-busy');
         }
     });
 
     /* ============================================================
-       LOGIN FORM — POST /api/auth/login
+       LOGIN FORM
     ============================================================ */
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1749,6 +2042,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('loginSubmitBtn');
         btn.disabled = true;
         btn.textContent = 'Signing in...';
+        btn.setAttribute('aria-busy', 'true');
 
         try {
             const data = await AuthService.login({ email, password });
@@ -1760,6 +2054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btn.disabled = false;
             btn.textContent = 'Sign In';
+            btn.removeAttribute('aria-busy');
         }
     });
 
