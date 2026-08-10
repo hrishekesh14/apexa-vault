@@ -6,6 +6,7 @@
 'use strict';
 
 const jwt  = require('jsonwebtoken');
+const config = require('../config/config');
 const User = require('../models/user.model');
 
 /**
@@ -31,7 +32,7 @@ const protect = async (req, res, next) => {
         // Verify token
         let decoded;
         try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
+            decoded = jwt.verify(token, config.jwtSecret);
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
                 return res.status(401).json({
@@ -68,8 +69,8 @@ const protect = async (req, res, next) => {
 const generateAccessToken = (userId) => {
     return jwt.sign(
         { id: userId },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        config.jwtSecret,
+        { expiresIn: config.jwtExpiresIn || '7d' }
     );
 };
 
@@ -79,8 +80,8 @@ const generateAccessToken = (userId) => {
 const generateRefreshToken = (userId) => {
     return jwt.sign(
         { id: userId },
-        process.env.JWT_REFRESH_SECRET,
-        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
+        config.jwtRefreshSecret,
+        { expiresIn: config.jwtRefreshExpiresIn || '30d' }
     );
 };
 

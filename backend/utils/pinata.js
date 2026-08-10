@@ -1,3 +1,4 @@
+'use strict';
 const pinataSDK = require("@pinata/sdk");
 
 console.log("PINATA JWT FOUND:", !!process.env.PINATA_JWT);

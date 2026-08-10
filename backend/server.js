@@ -17,6 +17,7 @@ const compression  = require('compression');
 const rateLimit    = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 
+const config = require('./config/config');
 const connectDB    = require('./config/database');
 const logger       = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
@@ -29,7 +30,7 @@ const blockchainRoutes = require('./routes/blockchain.routes');
 const userRoutes       = require('./routes/user.routes');
 
 const app  = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 app.set('trust proxy', 1);
 /* =========================================================
    🔥 BODY PARSING MIDDLEWARE (IMPORTANT FIX ADDED HERE)
@@ -49,16 +50,18 @@ app.use(cors({
         'http://127.0.0.1:5500',
         'http://localhost:5500',
         'http://localhost:3000',
-        'https://apexa-vault-2nyo.vercel.app'
-    ],
+        'http://localhost:5000',
+        'https://apexa-vault-2nyo.vercel.app',
+        config.frontendUrl,
+    ].filter(Boolean),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 // ── Rate Limiting ────────────────────────────────────────────────
 const limiter = rateLimit({
-    windowMs : parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-    max      : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500,
+    windowMs : config.rateLimitWindowMs || 15 * 60 * 1000,
+    max      : config.rateLimitMaxRequests || 500,
     message  : { success: false, message: 'Too many requests. Please try again later.' },
     standardHeaders: true,
     legacyHeaders: false
@@ -66,7 +69,7 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs : 15 * 60 * 1000,
-    max      : 100,
+    max      : 50,
     message  : { success: false, message: 'Too many auth attempts. Please wait 15 minutes.' }
 });
 

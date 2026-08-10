@@ -8,7 +8,6 @@
 const File             = require('../models/file.model');
 const Activity         = require('../models/activity.model');
 const blockchainService = require('../services/blockchain.service');
-const logger           = require('../utils/logger');
 
 /**
  * GET /api/blockchain/records

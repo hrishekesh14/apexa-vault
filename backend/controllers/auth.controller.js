@@ -18,6 +18,7 @@ const User     = require('../models/user.model');
 const Activity = require('../models/activity.model');
 const { generateAccessToken, generateRefreshToken } = require('../middleware/auth.middleware');
 const logger   = require('../utils/logger');
+const config   = require('../config/config');
 const jwt      = require('jsonwebtoken');
 
 /**
@@ -154,7 +155,7 @@ const refresh = async (req, res, next) => {
 
         let decoded;
         try {
-            decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+            decoded = jwt.verify(refreshToken, config.jwtRefreshSecret);
         } catch {
             return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
         }
@@ -182,11 +183,25 @@ const refresh = async (req, res, next) => {
  */
 const logout = async (req, res, next) => {
     try {
-        req.user.refreshToken = null;
-        await req.user.save();
+        let user = req.user;
+
+        if (!user) {
+            const { refreshToken } = req.body || {};
+            if (!refreshToken) {
+                return res.status(400).json({ success: false, message: 'Refresh token required' });
+            }
+            user = await User.findOne({ refreshToken });
+        }
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        user.refreshToken = null;
+        await user.save();
 
         await Activity.create({
-            owner : req.user._id,
+            owner : user._id,
             type  : 'auth',
             detail: 'Signed out',
             ipAddress: req.ip

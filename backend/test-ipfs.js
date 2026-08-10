@@ -1,3 +1,4 @@
+'use strict';
 require('dotenv').config();
 
 const ipfsService = require('./services/ipfs.service');
